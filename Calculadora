@@ -1,0 +1,144 @@
+;Calculadora1.1
+
+%include "io.mac"
+
+.DATA
+
+	bienvenido	db	'¡Bienvenido a la calculadora más crack del TEC!',10,13,0
+	sim			db	10,13,'$ ',0
+	contador	db	0
+	temporal	db	0
+	
+.UDATA
+
+	operacion	resb	16
+	posfijo		resb	16
+
+.CODE
+	.STARTUP
+		call limpiarRegistros
+		PutStr bienvenido	
+		nwln				
+	
+		PutStr sim	
+		GetStr  operacion	;recibo el input del usuario
+		
+		generarPosfijo:
+		
+			mov bl, [operacion+edx];muevo el 1er caracter de la operacion al bl
+			cmp bl,0			;verifico si es el ultimo caracter de la operacion
+			je terminar
+			mov ax, [contador]		
+			inc edx					;muevo el puntero para la proxima iteracion 
+			cmp bl, 2Fh				;verifico si es un caracter de operacion
+			jle verificarOperacion	
+			cmp bl, 3Ah				;verifico si es un numero
+			jnge esNumero
+			jmp verificarLetra		;verifico si es una letra
+			
+		verificarOperacion:
+			cmp bl, '+'
+			je verificarSumaResta
+			cmp bl, '-'
+			je verificarSumaResta
+			cmp bl, '*'
+			je verificarMultDiv
+			cmp bl, '/'
+			je verificarMultDiv
+			cmp bl, '('
+			je meterPila
+			cmp bl, ')'
+			je vaciarPila
+			jmp generarPosfijo
+				
+		verificarSumaResta:
+			mov [contador], ax
+			cmp cl, 0
+			je meterPila
+			Pop ax
+			Push ax
+			cmp al, '('
+			je meterPila
+			cmp al, '+'
+			je cambiarTope
+			cmp al, '-'
+			je cambiarTope
+			cmp al, '*'
+			je cambiarTope
+			cmp al, '/'
+			je cambiarTope
+			PutCh 'E'
+			
+		verificarMultDiv:
+			mov [contador], ax
+			cmp cl, 0
+			je meterPila
+			Pop ax
+			Push ax
+			cmp al, '('
+			je meterPila
+			cmp al, '+'
+			je meterPila
+			cmp al, '-'
+			je meterPila
+			cmp al, '*'
+			je cambiarTope
+			cmp al, '/'
+			je cambiarTope
+			PutCh 'E'
+				
+		vaciarPila:
+			cmp cl, 0
+			jne ciclo
+			jmp generarPosfijo
+			ciclo:
+				Pop bx
+				cmp bl, '('
+				je restar
+				mov [posfijo+eax], bx
+				inc eax
+				mov [contador], eax
+				loop ciclo
+				jmp generarPosfijo
+			restar:
+				dec cx
+				jmp generarPosfijo
+					
+		
+		esNumero:
+			mov [posfijo+eax], bl
+			inc eax
+			mov [contador], eax
+			jmp generarPosfijo
+			
+		verificarLetra:
+			jmp generarPosfijo
+			
+		meterPila:
+			Push bx
+			inc cx
+			jmp generarPosfijo
+			
+		cambiarTope:
+			Pop ax
+			Push bx
+			mov bx, [contador]
+			mov [posfijo+ebx], ax
+			inc ebx
+			mov [contador], ebx
+			jmp generarPosfijo
+			
+	terminar:
+		cmp cl, 0
+		jne vaciarPila
+		PutStr posfijo
+		.EXIT
+
+limpiarRegistros:
+	mov eax, 0
+	mov ebx, 0
+	mov ecx, 0
+	mov edx, 0
+	ret
+	
+	
