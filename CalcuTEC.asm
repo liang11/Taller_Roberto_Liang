@@ -5,7 +5,7 @@
 	bienvenido	db	'¡Bienvenido a la calculadora más crack del TEC!',10,13,0
 	sim			db	10,13,'$ ',0
 	msg_error	db	'Expresion Invalida!',0
-	operacion	db	'(6+2)*3/2+2-4',0;'(6+2)*3/2-4',0
+	operacion	db	'(6+2)*3/2+2-8 ',0;'(6+2)*3/2-4',0
 
 .UDATA
 	;operacion	resb	16
@@ -133,6 +133,7 @@
 			cmp ecx, 0
 			jne vaciarPila
 			PutStr posfijo
+			mov edx, eax
 			dec edx
 			jmp llenarPila
 			
@@ -141,7 +142,7 @@
 			cmp bl, 0
 			je resolver
 			dec edx
-			call esNumero
+			call verificarNumero
 			cmp byte[boolean], 1
 			je implicito
 			Push ebx
@@ -158,43 +159,52 @@
 			Pop eax
 			Pop ebx
 			Pop edx
-			cmp bl, '+'
+			cmp dl, '+'
 			je sumar
-			cmp bl, '-'
+			cmp dl, '-'
 			je restar
-			cmp bl, '/'
+			cmp dl, '/'
 			je dividir
-			cmp bl, '*'
+			cmp dl, '*'
 			je multiplicar
 			
 		sumar:
 			PutCh 'S'
 			add eax, ebx
 			Push eax
+			PutInt ax
 			dec ecx
+			jmp resolver
 		
 		restar:
-		PutCh 'R'
+			PutCh 'R'
 			sub eax, ebx
 			Push eax
+			PutInt ax
 			dec ecx
+			jmp resolver
 			
 		dividir:
-		PutCh 'D'
-			div ebx
+			PutCh 'D'
+			div bl				;-------------------- nop hacer diviciones cn tamanio mas q bl
 			Push eax
+			PutInt ax
 			dec ecx
+			jmp resolver
 			
 		multiplicar:
-		PutCh 'M'
+			PutCh 'M'
 			mul ebx
 			Push eax
+			PutInt ax
 			dec ecx
+			jmp resolver
 	
-		mostrarResultado: ;;;;;;;;;;;;;;;;;;;;;;;;check aqui!
+		mostrarResultado: 
+			nwln
 			Pop eax
-			mov [var], eax
-			PutCh al
+			;mov [var], eax
+			PutInt ax
 			adios:
 			.EXIT
 					
